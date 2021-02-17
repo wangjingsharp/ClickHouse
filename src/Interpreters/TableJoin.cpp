@@ -257,7 +257,12 @@ void TableJoin::addJoinedColumnsAndCorrectTypes(ColumnsWithTypeAndName & columns
         if (auto it = left_type_map.find(col.name); it != left_type_map.end())
             col.type = it->second;
         if (correct_nullability && leftBecomeNullable(col.type))
-            col.type = makeNullable(col.type);
+        {
+            /// No need to nullify constants
+            bool is_column_const = col.column && isColumnConst(*col.column);
+            if (!is_column_const)
+                col.type = makeNullable(col.type);
+        }
     }
 
     /// Types in columns_added_by_join already converted and set nullable if needed
